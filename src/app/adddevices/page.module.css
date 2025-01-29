@@ -1,0 +1,97 @@
+/* src/app/addDevice/page.module.css */
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e0e7ff, #fff);
+    padding: 20px;
+  }
+  
+  .card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border: 2px solid #e5e7eb;
+  }
+  
+  .title {
+    font-size: 2rem;
+    color: #1f2937;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  
+  .subtitle {
+    font-size: 1.2rem;
+    color: #374151;
+    margin-bottom: 30px;
+  }
+  
+  .imageUpload {
+    margin-bottom: 30px;
+  }
+  
+  .input {
+    display: block;
+    margin: 0 auto 20px;
+    padding: 10px;
+    font-size: 1rem;
+  }
+  
+  .previewImage {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .button {
+    padding: 15px;
+    font-size: 1.1rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  
+  .button:hover {
+    background-color: #2563eb;
+    transform: scale(1.05);
+  }
+  
+  .button:active {
+    transform: scale(0.98);
+  }
+  
+  @media (max-width: 768px) {
+    .card {
+      padding: 30px;
+    }
+  
+    .title {
+      font-size: 1.8rem;
+    }
+  
+    .subtitle {
+      font-size: 1rem;
+    }
+  
+    .button {
+      font-size: 1rem;
+      padding: 12px;
+    }
+  }
+  

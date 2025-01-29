@@ -1,0 +1,8 @@
+Model Information:
+* title:	Smoker's Lungs VS Non-smoker's lungs
+* source:	https://sketchfab.com/3d-models/smokers-lungs-vs-non-smokers-lungs-0808cb4985234c9093221a7155d1fdec
+* author:	arloopa (https://sketchfab.com/arloopa)
+
+Model License:
+* license type:	SKETCHFAB Editorial (https://sketchfab.com/licenses)
+* requirements:	Use only in connection with events that are newsworthy or of public interest

@@ -1,0 +1,111 @@
+/* src/app/instructions/page.module.css */
+.background {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f4f8, #ffffff); /* Soft gradient background */
+}
+
+.whiteBackground {
+  background-color: #ffffff;
+  border-radius: 16px; /* Rounded corners for card-like effect */
+  padding: 40px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* Enhanced shadow for depth */
+  max-width: 900px; /* Increased width for larger content area */
+  width: 100%;
+}
+
+.card {
+  background-color: #f9f9f9; /* Light background for card content */
+  border-radius: 12px; /* Rounded corners for the card */
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Soft shadow for card */
+  margin: 0 auto; /* Center the card horizontally */
+}
+
+.title {
+  font-size: 2.8rem; /* Larger font size for emphasis */
+  margin-bottom: 20px;
+  color: #222; /* Darker color for better readability */
+  font-weight: 700; /* Bold text */
+}
+
+.description {
+  font-size: 1.4rem; /* Larger font size for better readability */
+  margin-bottom: 30px;
+  color: #555; /* Slightly lighter color for description */
+}
+
+.instructions {
+  margin-bottom: 30px;
+}
+
+.instructionsTitle {
+  font-size: 1.6rem; /* Slightly larger font size for instructions title */
+  margin-bottom: 15px;
+  color: #333; /* Darker color for emphasis */
+  font-weight: 600;
+}
+
+.instructionsText {
+  font-size: 1.2rem;
+  color: #444; /* Darker color for better readability */
+  line-height: 1.6; /* Better line spacing */
+}
+
+.buttonContainer {
+  margin-top: 20px;
+}
+
+.button {
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 8px; /* Rounded corners for buttons */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.button:hover {
+  background-color: #005bb5;
+  transform: scale(1.05);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.2rem;
+  }
+
+  .description, .instructionsText {
+    font-size: 1.1rem;
+  }
+
+  .button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .description, .instructionsText {
+    font-size: 1rem;
+  }
+
+  .button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
