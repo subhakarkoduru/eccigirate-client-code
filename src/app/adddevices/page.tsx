@@ -2,14 +2,19 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+type Device = {
+  image: File | null;
+  preview: string | null;
+};
+
 import styles from './page.module.css';
 
 const AddDevicePage = () => {
-  const [devices, setDevices] = useState([{ image: null, preview: null }]);
+  const [devices, setDevices] = useState<Device[]>([{ image: null, preview: null }]);
   const router = useRouter();
 
-  const handleImageChange = (index, e) => {
-    const file = e.target.files[0];
+ const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const updatedDevices = [...devices];
       updatedDevices[index] = {
@@ -18,7 +23,7 @@ const AddDevicePage = () => {
       };
       setDevices(updatedDevices);
     }
-  };
+};
 
   const handleAddMoreClick = () => {
     setDevices([...devices, { image: null, preview: null }]);
@@ -37,7 +42,7 @@ const AddDevicePage = () => {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/upload', {
+      const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
         headers: {

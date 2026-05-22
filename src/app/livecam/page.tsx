@@ -356,6 +356,7 @@
 
 
 "use client";
+export const dynamic = "force-dynamic";
 
 import React, { useEffect, useRef, useState } from "react";
 import "aframe";
@@ -379,33 +380,73 @@ const PhoneAndroidPage = () => {
   const websocket = useRef(null);
   let lastFrameTime = 0;
   const frameRate = 10;
+  const CAPTURE_WIDTH  = 640;
+  const CAPTURE_HEIGHT = 640;
 
   const captureFrameId = useRef(null);
 
   // Handle setting the scene ref and attaching the event listener
-  const setSceneRef = (node) => {
-    if (node) {
+//  const setSceneRef = (node) => {
+//    if (node) {
       // Node is the <a-scene> element
-      sceneRef.current = node;
+//      sceneRef.current = node;
 
-      const handleExitVR = () => {
-        console.log("Exit VR event detected");
+//      const handleExitVR = () => {
+//        console.log("Exit VR event detected");
         // Reload the page upon exiting VR mode
-        window.location.reload();
-      };
+//        window.location.reload();
+//      };
 
       // Attach the event listener
-      node.addEventListener("exit-vr", handleExitVR);
+//      node.addEventListener("exit-vr", handleExitVR);
 
       // Store the handler for cleanup
-      node.handleExitVR = handleExitVR;
-    } else {
+//      node.handleExitVR = handleExitVR;
+//    } else {
       // Cleanup when the node is unmounted
-      if (sceneRef.current && sceneRef.current.handleExitVR) {
+//      if (sceneRef.current && sceneRef.current.handleExitVR) {
+//        sceneRef.current.removeEventListener("exit-vr", sceneRef.current.handleExitVR);
+//      }
+//    }
+//  };
+
+   const setSceneRef = (node) => {
+  	if (node) {
+          sceneRef.current = node;
+
+          const handleExitVR = () => {
+      console.log("Exit VR event detected");
+      window.location.reload();
+    };
+
+    // Attach event listeners
+        node.addEventListener("exit-vr", handleExitVR);
+
+    // NEW: Wait for scene to fully load before entering VR
+       const handleSceneLoaded = () => {
+       console.log("A-Frame scene fully loaded");
+       if (showVR && node.enterVR) {
+        console.log("Calling enterVR after scene is ready");
+        node.enterVR();
+      }
+    };
+       node.addEventListener("loaded", handleSceneLoaded);
+
+    // Store handlers for cleanup
+       node.handleExitVR = handleExitVR;
+       node.handleSceneLoaded = handleSceneLoaded;
+
+  } else {
+    if (sceneRef.current) {
+      if (sceneRef.current.handleExitVR) {
         sceneRef.current.removeEventListener("exit-vr", sceneRef.current.handleExitVR);
       }
+      if (sceneRef.current.handleSceneLoaded) {
+        sceneRef.current.removeEventListener("loaded", sceneRef.current.handleSceneLoaded);
+      }
     }
-  };
+  }
+};
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -436,24 +477,44 @@ const PhoneAndroidPage = () => {
     }
   }, [cameraStarted]);
 
+//  useEffect(() => {
+//    console.log("showVR state changed:", showVR);
+//    if (showVR) {
+//      console.log("Entering VR mode, stopping capture loop");
+//      if (captureFrameId.current !== null) {
+//        cancelAnimationFrame(captureFrameId.current);
+//        captureFrameId.current = null;
+//      }
+//    } else {
+//      console.log("Exiting VR mode or initial state, starting capture loop");
+//      if (captureFrameId.current === null && cameraStarted) {
+//        captureAndSendFrame();
+//      }
+//    }
+//  }, [showVR, cameraStarted]); // Added cameraStarted to dependency array
+  //
+
   useEffect(() => {
-    console.log("showVR state changed:", showVR);
-    if (showVR) {
-      console.log("Entering VR mode, stopping capture loop");
-      if (captureFrameId.current !== null) {
-        cancelAnimationFrame(captureFrameId.current);
-        captureFrameId.current = null;
-      }
-    } else {
-      console.log("Exiting VR mode or initial state, starting capture loop");
-      if (captureFrameId.current === null && cameraStarted) {
-        captureAndSendFrame();
-      }
+  console.log("showVR state changed:", showVR);
+  if (showVR) {
+    console.log("Entering VR mode, stopping capture loop");
+    if (captureFrameId.current !== null) {
+      cancelAnimationFrame(captureFrameId.current);
+      captureFrameId.current = null;
     }
-  }, [showVR, cameraStarted]); // Added cameraStarted to dependency array
+  } else {
+    console.log("Exiting VR mode or initial state, starting capture loop");
+    if (captureFrameId.current === null && cameraStarted) {
+      captureAndSendFrame();
+    }
+  }
+}, [showVR, cameraStarted]);
+
 
   const setupWebSocket = () => {
-    websocket.current = new WebSocket("ws://localhost:8000/video");
+    const proto = window.location.protocol === "https:" ? "wss" : "ws";
+    websocket.current = new WebSocket(`${proto}://${window.location.host}/api/video`);	  
+    //websocket.current = new WebSocket("wss://ec2-3-21-51-34.us-east-2.compute.amazonaws.com/api/video");
     //websocket.current = new WebSocket("wss://b92b-71-191-204-235.ngrok-free.app/video");
     websocket.current.binaryType = "arraybuffer";
 
@@ -555,8 +616,8 @@ const PhoneAndroidPage = () => {
         videoRef.current.srcObject = stream;
         await new Promise((resolve) => (videoRef.current.onloadedmetadata = resolve));
         if (canvasCaptureRef.current && canvasDrawRef.current) {
-          canvasCaptureRef.current.width = videoRef.current.videoWidth;
-          canvasCaptureRef.current.height = videoRef.current.videoHeight;
+          canvasCaptureRef.current.width = CAPTURE_WIDTH;
+          canvasCaptureRef.current.height = CAPTURE_HEIGHT;
           canvasDrawRef.current.width = videoRef.current.videoWidth;
           canvasDrawRef.current.height = videoRef.current.videoHeight;
           videoRef.current.play();
@@ -589,14 +650,13 @@ const PhoneAndroidPage = () => {
         videoRef.current,
         0,
         0,
-        canvasCaptureRef.current.width,
-        canvasCaptureRef.current.height
+        CAPTURE_WIDTH, CAPTURE_HEIGHT
       );
       canvasCaptureRef.current.toBlob((blob) => {
         if (websocket.current && websocket.current.readyState === WebSocket.OPEN && blob) {
           websocket.current.send(blob);
         }
-      }, "image/jpeg", 0.8);
+      }, "image/jpeg", 0.6);
       captureFrameId.current = requestAnimationFrame(captureAndSendFrame);
     }
   };
