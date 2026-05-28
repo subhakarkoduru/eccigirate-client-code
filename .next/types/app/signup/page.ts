@@ -1,4 +1,4 @@
-// File: /home/ec2-user/projects/projects/eccigirate-client-code/src/app/signup/page.tsx
+// File: /Users/kodurusubhakar/Documents/E-cigirate-code/Client_code/eccigirate-client-code/src/app/signup/page.tsx
 import * as entry from '../../../../src/app/signup/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
