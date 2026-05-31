@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import styles from './page.module.css';
 
 const InstructionsPage = () => {
@@ -44,6 +45,7 @@ const InstructionsPage = () => {
           </div>
         </div>
       </div>
+      <ChatWidget />
     </div>
   );
 };

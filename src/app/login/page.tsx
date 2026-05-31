@@ -22,14 +22,6 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      // const response = await fetch('https://b92b-71-191-204-235.ngrok-free.app/login', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ email, password }),
-      // });
-
       if (response.ok) {
         const data = await response.json();
         setError(null);
