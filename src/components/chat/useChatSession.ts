@@ -80,10 +80,12 @@ export function useChatSession() {
         try {
           res = await attempt(true);
         } catch (err) {
-          // Stale session: clear and retry once without session_id
-          if (err instanceof ChatApiError && err.status === 410) {
+         if (err instanceof ChatApiError && err.status === 410) {
             persistSession(null);
             res = await attempt(false);
+          } else if (err instanceof ChatApiError && err.status === 401) {
+            window.location.href = "/";
+            return;
           } else {
             throw err;
           }
