@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import "aframe";
+import Link from "next/link";
 // Note: The script tag in your import is unnecessary in React.
 // Instead, use import statements or include the script in your HTML if needed.
 
@@ -417,6 +418,13 @@ const PhoneAndroidPage = () => {
             </div>
           </div>
           <canvas ref={canvasCaptureRef} className="hidden"></canvas>
+
+          <Link
+            href="/models"
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded text-center"
+          >
+            Explore Health Effects of Vaping in 3D
+          </Link>
 
           {/* Display links when both detectionLink and detectionText are available */}
           {detectionLink && detectionText && (

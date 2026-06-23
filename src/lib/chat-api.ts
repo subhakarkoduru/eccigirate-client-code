@@ -25,6 +25,7 @@ export async function sendChatMessage(
     res = await fetch(CHAT_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(payload),
       signal,
     });

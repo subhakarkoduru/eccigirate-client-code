@@ -48,6 +48,7 @@ const AddDevicePage = () => {
         headers: {
           'Accept': 'application/json',
         },
+        credentials: 'include',
       });
 
       // const response = await fetch('https://b92b-71-191-204-235.ngrok-free.app/upload', {
