@@ -1,49 +1,49 @@
 "use client";
-
+ 
 import React, { useEffect, useRef, useState } from "react";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import "aframe";
 import Link from "next/link";
 // Note: The script tag in your import is unnecessary in React.
 // Instead, use import statements or include the script in your HTML if needed.
-
+ 
 const PhoneAndroidPage = () => {
   const videoRef = useRef(null);
   const canvasCaptureRef = useRef(null);
   const canvasDrawRef = useRef(null);
   const sceneRef = useRef(null);
-
+ 
   const [detectionLink, setDetectionLink] = useState("");
   const [detectionText, setDetectionText] = useState("");
   const [showVR, setShowVR] = useState(false);
   const [showVRButton, setShowVRButton] = useState(false);
-
+ 
   // Added cameraStarted state
   const [cameraStarted, setCameraStarted] = useState(false);
-
+ 
   const websocket = useRef(null);
   let lastFrameTime = 0;
   const frameRate = 10;
   const CAPTURE_WIDTH  = 640;
   const CAPTURE_HEIGHT = 640;
-
+ 
   const captureFrameId = useRef(null);
-
+ 
   // Handle setting the scene ref and attaching the event listener
 //  const setSceneRef = (node) => {
 //    if (node) {
       // Node is the <a-scene> element
 //      sceneRef.current = node;
-
+ 
 //      const handleExitVR = () => {
 //        console.log("Exit VR event detected");
         // Reload the page upon exiting VR mode
 //        window.location.reload();
 //      };
-
+ 
       // Attach the event listener
 //      node.addEventListener("exit-vr", handleExitVR);
-
+ 
       // Store the handler for cleanup
 //      node.handleExitVR = handleExitVR;
 //    } else {
@@ -53,19 +53,19 @@ const PhoneAndroidPage = () => {
 //      }
 //    }
 //  };
-
+ 
    const setSceneRef = (node) => {
   	if (node) {
           sceneRef.current = node;
-
+ 
           const handleExitVR = () => {
       console.log("Exit VR event detected");
       window.location.reload();
     };
-
+ 
     // Attach event listeners
         node.addEventListener("exit-vr", handleExitVR);
-
+ 
     // NEW: Wait for scene to fully load before entering VR
        const handleSceneLoaded = () => {
        console.log("A-Frame scene fully loaded");
@@ -75,11 +75,11 @@ const PhoneAndroidPage = () => {
       }
     };
        node.addEventListener("loaded", handleSceneLoaded);
-
+ 
     // Store handlers for cleanup
        node.handleExitVR = handleExitVR;
        node.handleSceneLoaded = handleSceneLoaded;
-
+ 
   } else {
     if (sceneRef.current) {
       if (sceneRef.current.handleExitVR) {
@@ -91,13 +91,13 @@ const PhoneAndroidPage = () => {
     }
   }
 };
-
+ 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setupWebSocket();
       // Removed startCamera() from here
     }
-
+ 
     // Cleanup function on component unmount
     return () => {
       if (websocket.current) {
@@ -113,14 +113,14 @@ const PhoneAndroidPage = () => {
       }
     };
   }, []);
-
+ 
   // New useEffect to start camera after user interaction
   useEffect(() => {
     if (cameraStarted) {
       startCamera();
     }
   }, [cameraStarted]);
-
+ 
 //  useEffect(() => {
 //    console.log("showVR state changed:", showVR);
 //    if (showVR) {
@@ -137,7 +137,7 @@ const PhoneAndroidPage = () => {
 //    }
 //  }, [showVR, cameraStarted]); // Added cameraStarted to dependency array
   //
-
+ 
   useEffect(() => {
   console.log("showVR state changed:", showVR);
   if (showVR) {
@@ -153,15 +153,15 @@ const PhoneAndroidPage = () => {
     }
   }
 }, [showVR, cameraStarted]);
-
-
+ 
+ 
   const setupWebSocket = () => {
     const proto = window.location.protocol === "https:" ? "wss" : "ws";
     websocket.current = new WebSocket(`${proto}://${window.location.host}/api/video`);	  
     //websocket.current = new WebSocket("wss://ec2-3-21-51-34.us-east-2.compute.amazonaws.com/api/video");
     //websocket.current = new WebSocket("wss://b92b-71-191-204-235.ngrok-free.app/video");
     websocket.current.binaryType = "arraybuffer";
-
+ 
     websocket.current.onopen = () => {
       console.log("WebSocket connection established.");
       if (videoRef.current) {
@@ -169,14 +169,14 @@ const PhoneAndroidPage = () => {
       }
       startHeartbeat();
     };
-
+ 
     websocket.current.onerror = (event) => {
       console.error("WebSocket error:", event);
       if (videoRef.current) {
         videoRef.current.style.border = "2px solid red";
       }
     };
-
+ 
     websocket.current.onclose = (event) => {
       console.log("WebSocket connection closed:", event.reason);
       if (videoRef.current) {
@@ -184,11 +184,11 @@ const PhoneAndroidPage = () => {
       }
       setTimeout(setupWebSocket, 1000);
     };
-
+ 
     websocket.current.onmessage = (event) => {
       const messageData = event.data;
       console.log("WebSocket message received:", messageData);
-
+ 
       if (messageData === "None") {
         clearCanvas();
         setDetectionLink("");
@@ -201,7 +201,7 @@ const PhoneAndroidPage = () => {
           console.log("Parsed data:", data);
           if (data.boundingbox && data.className) {
             drawRectangle(data.boundingbox, data.className);
-
+ 
             let linkUrl;
             switch (data.className) {
               case "Blume-E-Ciggirate":
@@ -229,7 +229,7 @@ const PhoneAndroidPage = () => {
               default:
                 linkUrl = "https://default-link.com";
             }
-
+ 
             setDetectionLink(linkUrl);
             setDetectionText(`More Information about ${data.className}`);
             setShowVRButton(true);
@@ -241,7 +241,7 @@ const PhoneAndroidPage = () => {
       }
     };
   };
-
+ 
   const startHeartbeat = () => {
     setInterval(() => {
       if (websocket.current && websocket.current.readyState === WebSocket.OPEN) {
@@ -249,7 +249,7 @@ const PhoneAndroidPage = () => {
       }
     }, 30000);
   };
-
+ 
   const startCamera = async () => {
     try {
       //const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -319,8 +319,7 @@ const PhoneAndroidPage = () => {
         contextDraw.lineWidth = 2;
         contextDraw.beginPath();
         contextDraw.rect(x1, y1, x2 - x1, y2 - y1);
-        contextDraw.stroke();
-
+        contextDraw.stroke(); 
         contextDraw.fillStyle = "red";
         contextDraw.font = "16px Arial";
         contextDraw.fillText(className, x1, y1 - 10);
@@ -338,8 +337,7 @@ const PhoneAndroidPage = () => {
   const enterVRMode = () => {
     console.log("Enter VR Mode button clicked");
     setShowVR(true);
-  };
-
+  }; 
   // New handler for starting the camera
   const handleStartCamera = () => {
     setCameraStarted(true);
@@ -398,12 +396,20 @@ const PhoneAndroidPage = () => {
         </div>
       ) : !cameraStarted ? (
         // Show Start Camera button if camera hasn't started
-        <button
-          onClick={handleStartCamera}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Start Camera
-        </button>
+        <div className="flex flex-col items-center mt-4">
+          <button
+            onClick={handleStartCamera}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Start Camera
+          </button>
+          <Link
+            href="/learn"
+            className="mt-3 text-sm text-indigo-600 underline"
+          >
+            Or learn about the effects of vaping →
+          </Link>
+        </div>
       ) : (
         // Previous content after camera has started
         <>
@@ -418,14 +424,22 @@ const PhoneAndroidPage = () => {
             </div>
           </div>
           <canvas ref={canvasCaptureRef} className="hidden"></canvas>
-
-          <Link
-            href="/models"
-            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded text-center"
-          >
-            Explore Health Effects of Vaping in 3D
-          </Link>
-
+ 
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+            <Link
+              href="/models"
+              className="px-4 py-2 bg-indigo-600 text-white rounded text-center"
+            >
+              Explore Health Effects of Vaping in 3D
+            </Link>
+            <Link
+              href="/learn"
+              className="px-4 py-2 bg-teal-600 text-white rounded text-center"
+            >
+              Learn About Vaping
+            </Link>
+          </div>
+ 
           {/* Display links when both detectionLink and detectionText are available */}
           {detectionLink && detectionText && (
             <div className="bg-white p-2 border border-black mt-4">
@@ -456,6 +470,4 @@ const PhoneAndroidPage = () => {
     </div>
   );
 };
-
 export default PhoneAndroidPage;
-
