@@ -1,7 +1,8 @@
 "use client";
 export const dynamic = "force-dynamic";
-import React, { useState, useRef, useEffect } from "react";
+import React, { Suspense, useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
  
 const MODELS = [
   {
@@ -20,14 +21,12 @@ const MODELS = [
         description:
           "E-cigarettes contain acrolein, which can cause acute lung injury and COPD, and may contribute to asthma and lung cancer.",
         position: "2.2 1.6 0",
-        descDirection: "upper-right",
       },
       {
         text: "Irreversible lung damage",
         description:
           "Evolving evidence points to irreversible lung damage and chronic lung disease from e-cigarette use over time.",
         position: "-2.8 -2.0 0",
-        descDirection: "lower-left",
       },
     ],
   },
@@ -46,14 +45,12 @@ const MODELS = [
         description:
           "Nicotine raises blood pressure, speeds up heart rate, and narrows blood vessels, forcing the heart to work harder over time.",
         position: "1.3 1.5 0",
-        descDirection: "upper-right",
       },
       {
         text: "Risk of irregular heartbeat",
         description:
           "Recent research shows chemicals in some e-cigarettes may disrupt the heart's electrical activity, raising arrhythmia risk.",
         position: "-1.1 -1.3 0",
-        descDirection: "lower-left",
       },
     ],
   },
@@ -72,38 +69,38 @@ const MODELS = [
         description:
           "Nicotine exposure during adolescence can have long-lasting effects on attention, learning, impulse control, and memory.",
         position: "1.6 1.5 0",
-        descDirection: "upper-right",
       },
       {
         text: "Nicotine addiction pathway",
         description:
           "Nicotine has high addiction potential without durable cognitive benefit, making it easy to develop dependence.",
         position: "-1.4 -1.3 0",
-        descDirection: "lower-left",
       },
     ],
   },
 ];
  
-// Label with short text always visible; longer description appears on
-// hover (desktop, via A-Frame's cursor raycaster mouseenter/mouseleave)
-// or tap (mobile/touch, via click as a toggle).
-// descDirection controls where the description panel opens relative to
-// the label: "upper-right" or "lower-left".
-function OrganLabel({ text, description, position, descDirection = "lower-left" }) {
-  const [expanded, setExpanded] = useState(false);
+// Label chip: short text always visible in 3D, anchored to the model.
+// The longer description is NOT rendered in 3D space — a fixed-size 3D
+// panel either overflows tiny screens or wastes space on large ones, and
+// since it must also stay inside the camera's frustum as the user orbits,
+// there's no single world-space size that avoids clipping on every window
+// size. Instead the description is reported up to the page (via onEnter/
+// onLeave/onToggle) and rendered as an ordinary responsive HTML overlay —
+// see the description panel in ModelsPageInner.
+function OrganLabel({ text, position, isActive, onEnter, onLeave, onToggle }) {
   const hitboxRef = useRef(null);
- 
+
   useEffect(() => {
     const el = hitboxRef.current;
     if (!el) return;
- 
-    const handleEnter = () => setExpanded(true);
-    const handleLeave = () => setExpanded(false);
+
+    const handleEnter = () => onEnter();
+    const handleLeave = () => onLeave();
     // Touch devices don't fire mouseenter/mouseleave reliably, so a tap
     // toggles the description open/closed instead.
-    const handleClick = () => setExpanded((v) => !v);
- 
+    const handleClick = () => onToggle();
+
     el.addEventListener("mouseenter", handleEnter);
     el.addEventListener("mouseleave", handleLeave);
     el.addEventListener("click", handleClick);
@@ -112,18 +109,10 @@ function OrganLabel({ text, description, position, descDirection = "lower-left" 
       el.removeEventListener("mouseleave", handleLeave);
       el.removeEventListener("click", handleClick);
     };
-  }, []);
- 
+  }, [onEnter, onLeave, onToggle]);
+
   const boxWidth = Math.max(1.2, text.length * 0.075);
-  const descWidth = Math.max(2.2, description.length * 0.028);
- 
-  const isUpperRight = descDirection === "upper-right";
-  // Offset the description panel diagonally from the label's anchor point:
-  // upper-right => positive X, positive Y; lower-left => negative X, negative Y.
-  const descOffsetX = (descWidth / 2 + boxWidth / 2 + 0.15) * (isUpperRight ? 1 : -1);
-  const descOffsetY = 0.5 * (isUpperRight ? 1 : -1);
-  const descPosition = `${descOffsetX.toFixed(2)} ${descOffsetY.toFixed(2)} 0.02`;
- 
+
   return (
     <a-entity position={position} look-at="[camera]">
       {/* Hitbox: slightly larger than the visible plane so it's easy to hover/tap */}
@@ -134,10 +123,10 @@ function OrganLabel({ text, description, position, descDirection = "lower-left" 
         material="opacity: 0; transparent: true"
         position="0 0 0.005"
       ></a-entity>
- 
+
       <a-entity
         geometry={`primitive: plane; height: 0.35; width: ${boxWidth}`}
-        material={`color: ${expanded ? "#4F46E5" : "#111111"}; opacity: 0.85; side: double`}
+        material={`color: ${isActive ? "#4F46E5" : "#111111"}; opacity: 0.85; side: double`}
       ></a-entity>
       <a-text
         value={text}
@@ -146,26 +135,7 @@ function OrganLabel({ text, description, position, descDirection = "lower-left" 
         width={3}
         position="0 0 0.01"
       ></a-text>
- 
-      {/* Description panel — only rendered while expanded.
-          Opens upper-right or lower-left of the label depending on descDirection. */}
-      {expanded && (
-        <a-entity position={descPosition}>
-          <a-entity
-            geometry={`primitive: plane; height: 0.5; width: ${descWidth}`}
-            material="color: #1F2937; opacity: 0.95; side: double"
-          ></a-entity>
-          <a-text
-            value={description}
-            align="center"
-            color="#FFFFFF"
-            width={descWidth * 0.85}
-            wrap-count={32}
-            position="0 0 0.01"
-          ></a-text>
-        </a-entity>
-      )}
- 
+
       {/* small connector dot at the anchor point */}
       <a-entity
         geometry="primitive: sphere; radius: 0.03"
@@ -176,19 +146,28 @@ function OrganLabel({ text, description, position, descDirection = "lower-left" 
   );
 }
  
-export default function ModelsPage() {
+function ModelsPageInner() {
+  const searchParams = useSearchParams();
+  const requestedOrgan = searchParams.get("organ");
+  const initialId = MODELS.some((m) => m.id === requestedOrgan)
+    ? requestedOrgan
+    : MODELS[0].id;
+
   const [aframeReady, setAframeReady] = useState(false);
-  const [activeId, setActiveId] = useState(MODELS[0].id);
+  const [activeId, setActiveId] = useState(initialId);
   const [labelsOn, setLabelsOn] = useState(true);
+  // { key, text, description } for whichever label is hovered/tapped, or
+  // null. Rendered as an HTML overlay (see below) instead of in 3D space.
+  const [activeLabel, setActiveLabel] = useState(null);
   const sceneRef = useRef(null);
   const active = MODELS.find((m) => m.id === activeId);
- 
+
   // Load aframe only in the browser — importing it at module scope breaks
   // the Next.js server build because aframe touches `document` on load.
   useEffect(() => {
     import("aframe").then(() => setAframeReady(true));
   }, []);
- 
+
   // Reload page on exiting VR (same pattern as your detection page)
   useEffect(() => {
     const node = sceneRef.current;
@@ -197,7 +176,13 @@ export default function ModelsPage() {
     node.addEventListener("exit-vr", handleExitVR);
     return () => node.removeEventListener("exit-vr", handleExitVR);
   }, [aframeReady]);
- 
+
+  // Switching organs remounts the scene (key={active.id}) — drop any
+  // description left open from the previous organ's labels.
+  useEffect(() => {
+    setActiveLabel(null);
+  }, [activeId]);
+
   if (!aframeReady) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white text-sm">
@@ -254,38 +239,78 @@ export default function ModelsPage() {
               gltf-model={active.src}
               rotation={active.rotation}
               scale={active.scale}
-              {...(active.id !== "lungs" && {
-                animation:
-                  "property: rotation; to: 0 360 0; loop: true; dur: 20000; easing: linear",
-              })}
+              animation="property: rotation; to: 0 360 0; loop: true; dur: 20000; easing: linear"
             ></a-entity>
  
             {labelsOn &&
-              active.labels.map((lbl, i) => (
-                <OrganLabel
-                  key={i}
-                  text={lbl.text}
-                  description={lbl.description}
-                  position={lbl.position}
-                  descDirection={lbl.descDirection}
-                />
-              ))}
+              active.labels.map((lbl, i) => {
+                const key = `${active.id}-${i}`;
+                return (
+                  <OrganLabel
+                    key={key}
+                    text={lbl.text}
+                    position={lbl.position}
+                    isActive={activeLabel?.key === key}
+                    onEnter={() =>
+                      setActiveLabel({ key, text: lbl.text, description: lbl.description })
+                    }
+                    onLeave={() =>
+                      setActiveLabel((cur) => (cur?.key === key ? null : cur))
+                    }
+                    onToggle={() =>
+                      setActiveLabel((cur) =>
+                        cur?.key === key
+                          ? null
+                          : { key, text: lbl.text, description: lbl.description }
+                      )
+                    }
+                  />
+                );
+              })}
           </a-entity>
  
-          <a-entity
-            position="0 4.2 -5"
-            geometry="primitive: plane; height: 0.4; width: 4"
-            material="color: #FFFFFF; opacity: 0.85"
-            look-at="[camera]"
-          >
-            <a-text value={active.caption} align="center" color="#000000" width={3.6} position="0 0 0.01"></a-text>
-          </a-entity>
         </a-scene>
- 
+
+        {/* Caption heading — plain HTML instead of in-3D a-text. A-Frame's
+            text renders through an SDF texture, so its sharpness depends on
+            how many actual screen pixels the plane covers; that varies with
+            monitor pixel density and looked blurry on standard-DPI desktop
+            screens (fine on high-DPI phones). HTML text is always crisp. */}
+        <div className="absolute inset-x-0 top-2 z-10 flex justify-center px-3 pointer-events-none">
+          <div className="rounded bg-white/85 px-4 py-1.5 text-center text-sm font-medium text-black sm:text-base">
+            {active.caption}
+          </div>
+        </div>
+
         {/* Source credit, bottom-right */}
         <div className="absolute bottom-2 right-3 text-[10px] text-gray-400 pointer-events-none">
           Source: American Lung Association / American Cancer Society
         </div>
+
+        {/* Description panel for the active label — plain responsive HTML
+            instead of a 3D-space panel, so it's never clipped by the
+            camera frustum and always reflows to fit the actual window. */}
+        {activeLabel && (
+          <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-3 pb-3 sm:px-6 sm:pb-6 pointer-events-none">
+            <div className="pointer-events-auto w-full max-w-lg max-h-[45vh] overflow-y-auto rounded-lg border border-gray-700 bg-gray-900/95 p-3 shadow-lg sm:p-4">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-sm font-semibold text-indigo-400 sm:text-base">
+                  {activeLabel.text}
+                </h3>
+                <button
+                  onClick={() => setActiveLabel(null)}
+                  aria-label="Close description"
+                  className="shrink-0 text-lg leading-none text-gray-400 hover:text-white"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-gray-200 sm:text-sm">
+                {activeLabel.description}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
  
       {/* Bottom tab bar */}
@@ -305,5 +330,19 @@ export default function ModelsPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function ModelsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen bg-black text-white text-sm">
+          Loading 3D viewer…
+        </div>
+      }
+    >
+      <ModelsPageInner />
+    </Suspense>
   );
 }

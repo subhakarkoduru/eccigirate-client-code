@@ -371,7 +371,7 @@ const PhoneAndroidPage = () => {
               look-at="[camera]"
             >
               <a-text
-                value="Smokers Lung"
+                value="Smoker's Lung"
                 align="center"
                 color="#ff0000"
                 position="0 0 0.01"
@@ -386,7 +386,7 @@ const PhoneAndroidPage = () => {
               look-at="[camera]"
             >
               <a-text
-                value="Non Smokers Lung"
+                value="Healthy Lung"
                 align="center"
                 color="#008000"
                 position="0 0 0.01"
